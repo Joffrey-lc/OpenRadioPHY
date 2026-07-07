@@ -1,10 +1,66 @@
 # D2D_pyMat
 
-**D2D_pyMat v0.1.0** is a Python-based OFDM image link for single-USRP loopback experiments. It provides an end-to-end reference chain from image framing to USRP transmission, IQ capture, PHY decoding, CRC validation, and diagnostic visualization.
+**D2D_pyMat: A Python PHY Prototyping Platform for AI-Native Wireless Experiments**
 
-The current release focuses on a reproducible single-radio TRX workflow that is useful for physical-layer prototyping, link debugging, and classroom or lab demonstrations.
+D2D_pyMat is a USRP + Python OFDM link for modular physical-layer experimentation. It is built for rapid AI-for-PHY validation over real radio hardware, with a readable signal chain that can be inspected, modified, and extended without rebuilding a full wireless stack.
 
-<img src="https://mymarkdown-pic.oss-cn-chengdu.aliyuncs.com/img220/20260707191315733.png" alt="image-20260707191315323" style="zoom:18%;" />
+The long-term goal is a modular PHY playground where conventional blocks and learnable blocks can be swapped without changing the whole system. Researchers should be able to replace modulation, pilot layouts, channel estimation, equalization, PAPR control, coding, or neural receiver modules, and then validate the result on captured IQ or over real USRP hardware. The Python implementation is intentional: it keeps the PHY close to NumPy/PyTorch/JAX-style workflows and makes experiment code easier to connect to AI training and evaluation pipelines.
+
+Current version: **v0.1.0**
+
+<img src="https://camo.githubusercontent.com/ed412e2043fd14b4885f1610b5bd299fba63cb41334ad980536e8496790afe76/68747470733a2f2f6d796d61726b646f776e2d7069632e6f73732d636e2d6368656e6764752e616c6979756e63732e636f6d2f696d673232302f32303236303730373139313331353733332e706e67" alt="image-20260707191315323" style="zoom:15%;" />
+
+## Roadmap / Project Status
+
+| Implemented | In Progress / Experimental | Planned |
+| :--- | :--- | :--- |
+| Single-USRP TX/RX loopback<br>PMAT image/file framing<br>BPSK, QPSK, 16QAM, and 64QAM<br>Custom CP-OFDM modem<br>Zadoff-Chu preamble synchronization<br>Scattered pilot insertion<br>Segmented pilot-aided channel interpolation<br>CRC strict/debug modes<br>Raw-RGB debug payload mode<br>Constellation, correlation, PAPR, and JSON diagnostics | PAPR clipping and reporting workflow<br>Saved-IQ offline replay and debugging flow<br>Per-run reproducibility metadata<br>Robustness tuning for short captures and low-SNR runs | FEC and coded/uncoded comparisons<br>Neural receiver and neural equalizer hooks<br>Trainable waveform modules<br>Two-USRP and multi-node D2D topology<br>Dataset capture tools for AI-for-PHY experiments<br>Real-time visual dashboard<br>Standard-compliant profiles where needed |
+
+## Highlights
+
+- **Python-first PHY chain**: core framing, OFDM processing, demodulation, parsing, and diagnostics are implemented in Python.
+- **Modular OFDM components**: modulation, pilots, preamble, synchronization, equalization, and payload handling are separated into replaceable modules.
+- **Real-hardware validation path**: the main application runs a single-USRP loopback through GNU Radio/UHD and records raw IQ for repeatable analysis.
+- **AI-oriented extension points**: the code is structured so conventional PHY blocks can later be replaced by learned waveform, equalization, detection, or decoding modules.
+- **Diagnostics for PHY debugging**: constellation plots, preamble correlation, PAPR reports, CRC statistics, and summary JSON files are generated for each run.
+
+## At a Glance
+
+| Component | Main entry points | Purpose |
+| :--- | :--- | :--- |
+| USRP application | `python -m D2D_pyMat.apps.trx_usrp` | Transmit an image/file, capture IQ, decode frames, and write diagnostics |
+| Protocol layer | `D2D_pyMat.protocol` | PMAT framing, metadata, chunking, CRC, and payload reconstruction |
+| OFDM layer | `D2D_pyMat.ofdm` | CP-OFDM TX/RX, pilots, preamble detection, timing, equalization, and demapping |
+| Modulation | `D2D_pyMat.qam` | BPSK, QPSK, 16QAM, and 64QAM mapping and hard decisions |
+| Runtime | `D2D_pyMat.runtime` | GNU Radio custom blocks, UHD flowgraph, and streaming decode helpers |
+| Diagnostics | `D2D_pyMat.viz` | Correlation, constellation, and PAPR visualization |
+
+## Quick Navigation
+
+- Project scope: [What It Is / What It Is Not](#what-it-is--what-it-is-not)
+- Current PHY chain: [Current Link](#current-link)
+- Hardware setup: [Physical Topology](#physical-topology), [Before the First USRP Run](#before-the-first-usrp-run)
+- Running the link: [Requirements and Quick Start](#requirements-and-quick-start)
+- Output files: [Payload, CRC, Diagnostics, and PAPR](#payload-crc-diagnostics-and-papr)
+- Maintenance: [Versioning](#versioning), [Roadmap / Project Status](#roadmap--project-status)
+
+## What It Is / What It Is Not
+
+### What D2D_pyMat is
+
+- A readable physical-layer prototyping platform for academic experiments.
+- A Python implementation of an end-to-end image/file link over USRP hardware.
+- A place to test synchronization, pilot design, equalization, modulation, PAPR handling, CRC behavior, and future AI-for-PHY blocks.
+- A bridge between offline simulation and real-radio validation.
+
+### What D2D_pyMat is not
+
+- It is not a Wi-Fi, LTE, or 5G NR compliant stack.
+- It is not a production communication stack.
+- It is not designed for interoperability, certification, MAC-layer studies, or full network behavior.
+- It does not currently include FEC, retransmission, multi-user scheduling, or a standard-compliant packet format.
+
+This repository uses a research OFDM frame format. It borrows familiar OFDM design ideas such as preamble-based synchronization, pilot-aided equalization, guard carriers, and CP-OFDM, and its frame organization is inspired by 802.11a-style OFDM practice. It also follows the broader structure-preserving OFDM design philosophy discussed in the DBU-OFDM paper, where OFDM structure is preserved while leaving room for trainable blocks. However, this project does **not** implement 802.11a and does **not** implement DBU-OFDM. Use it for PHY prototyping, not for Wi-Fi interoperability experiments.
 
 ## Current Link
 
@@ -15,17 +71,15 @@ image/file input
   -> PMAT protocol framing with metadata and CRC
   -> bit scrambling and block interleaving
   -> BPSK/QPSK/16QAM/64QAM mapping
-  -> CP-OFDM framing with Zadoff-Chu preamble and scattered pilots
+  -> custom CP-OFDM framing with Zadoff-Chu preamble and scattered pilots
   -> GNU Radio/UHD streaming TX
   -> single-USRP loopback channel
   -> IQ capture to complex64 file
   -> preamble detection and CP fine timing
-  -> pilot-aided channel estimation and CPE correction
+  -> segmented pilot-aided channel estimation and CPE correction
   -> frame parsing, CRC validation, and payload reconstruction
   -> constellation, synchronization, PAPR, and summary diagnostics
 ```
-
-**Figure placeholder: end-to-end D2D_pyMat signal-processing chain.**
 
 ## Physical Topology
 
@@ -46,16 +100,16 @@ Recommended starting topology:
 - One USRP reachable at `addr=192.168.10.2`.
 - TX antenna/port: `TX/RX`.
 - RX antenna/port: `RX2`.
-- Internal clock and time sources for a single-radio loopback.（Or config `--clock-source internal `  and `--time-source internal `）
+- Internal clock and time sources for a single-radio loopback: `--clock-source internal` and `--time-source internal`.
 - Conservative TX amplitude and gain settings first; raise RX gain until the captured peak is comfortably above the noise floor without clipping.
 
-<img src="https://mymarkdown-pic.oss-cn-chengdu.aliyuncs.com/img220/20260707193147226.png" alt="image-20260707193147163" style="zoom:25%;" />
+<img src="https://camo.githubusercontent.com/39a865c71852c21e2c77a704035cee7a7772c59e31d86b3be026513dd5608dee/68747470733a2f2f6d796d61726b646f776e2d7069632e6f73732d636e2d6368656e6764752e616c6979756e63732e636f6d2f696d673232302f32303236303730373139333134373232362e706e67" alt="image-20260707193147163" style="zoom:25%;" />
 
 ## Repository Layout
 
 ```text
 D2D_pyMat/
-  apps/trx_usrp.py          Single-USRP image link application
+  apps/trx_usrp.py          Single-USRP image/file link application
   config.py                 Protocol and OFDM configuration objects
   protocol.py               PMAT framing, metadata, parsing, and CRC
   ofdm.py                   OFDM TX/RX, pilots, synchronization, equalization
@@ -70,9 +124,9 @@ README.md
 VERSION
 ```
 
-Runtime artifacts are written to `trx_outputs/` by default and are ignored by Git.
+`VERSION` and `D2D_pyMat.__version__` carry the release identifier. Runtime artifacts are written to `trx_outputs/` by default and are ignored by Git.
 
-## Requirements
+## Requirements and Quick Start
 
 Use a Python environment with:
 
@@ -82,11 +136,17 @@ Use a Python environment with:
 - GNU Radio with UHD support
 - A working UHD installation that can discover and configure the USRP
 
-The development environment used for the current command examples is a Conda environment named `usrp`.
+The command examples below use a Conda environment named `usrp` on Windows PowerShell. Run from the repository root so relative input and output paths resolve correctly.
 
-## Quick Start
+### Before the First USRP Run
 
-Run from the repository root so relative input and output paths resolve correctly:
+- Confirm the USRP can be discovered by UHD before running the Python application.
+- Start with a controlled RF path. For a cabled loopback, use appropriate attenuation before connecting TX to RX.
+- Use internal clock/time sources for one-USRP loopback. Use external references only when the hardware setup requires them.
+- Start with QPSK strict/file mode and no PAPR clipping. Increase modulation order only after the QPSK baseline is clean.
+- Keep the first run conservative: moderate TX gain, moderate RX gain, and enough `--duration` to cover a full payload cycle.
+
+### Recommended First Run
 
 ```powershell
 D:\anaconda\envs\usrp\python.exe -m D2D_pyMat.apps.trx_usrp cat.jpg `
@@ -105,9 +165,10 @@ D:\anaconda\envs\usrp\python.exe -m D2D_pyMat.apps.trx_usrp cat.jpg `
   --bits-per-symbol 2 `
   --repeats 1 `
   --continuous `
-  --duration 3 `
+  --duration 6 `
   --tx-warmup-ms 500 `
   --rx-settle-ms 500 `
+  --threshold-factor 0.5 `
   --tx-source-mode streaming `
   --crc-mode strict `
   --payload-mode file `
@@ -128,13 +189,15 @@ payload_bytes=... frames=... one_cycle_seconds=... warmup_seconds=... capture_se
 duration > one_cycle_seconds + margin
 ```
 
-For a conservative first run, use QPSK (`--bits-per-symbol 2`) and no PAPR clipping.
+For a conservative first run, use QPSK (`--bits-per-symbol 2`) and omit `--papr-clip`.
 
-## Payload and CRC Modes
+## Payload, CRC, Diagnostics, and PAPR
+
+### Payload and CRC Modes
 
 `--crc-mode strict` is for validated file transfer. With `--payload-mode auto`, strict mode sends the original file bytes and writes output only when the frame CRCs and file CRC pass.
 
-`--crc-mode debug` is for low-SNR visualization. With `--payload-mode auto`, debug mode sends raw RGB pixels and writes a best-effort PNG even when CRC validation fails. Missing chunks are filled with zeros, so the image can still show visible channel impairment.
+`--crc-mode debug` is for low-SNR visualization. With `--payload-mode auto`, debug mode sends raw RGB pixels and writes a best-effort PNG even when CRC validation fails. Missing chunks are filled with zeros, so the output can still show visible channel impairment.
 
 Explicit payload modes are also available:
 
@@ -142,7 +205,7 @@ Explicit payload modes are also available:
 - `--payload-mode raw-rgb`: transmit expanded RGB pixels for visual debugging.
 - `--payload-mode auto`: choose `file` for strict mode and `raw-rgb` for debug mode.
 
-## Diagnostics
+### Output Files
 
 By default, outputs are written under `trx_outputs/`:
 
@@ -159,9 +222,9 @@ The constellation plot length is controlled by:
 --constellation-frames 8
 ```
 
-This parameter selects how many detected PHY frames are included in the plot. The number of OFDM symbols represented depends on the modulation and frame size, and is recorded in the summary JSON.
+This parameter selects how many detected PHY frames are included in the plot. The number of OFDM symbols represented depends on modulation and frame size, and is recorded in the summary JSON.
 
-## PAPR Controls
+### PAPR Controls
 
 PAPR reporting is optional:
 
@@ -198,16 +261,9 @@ The package exposes `D2D_pyMat.__version__`, the CLI supports `--version`, and e
 - Equalization is pilot-aided and designed for the current single-USRP loopback profile.
 - USRP gain, antenna path, and ADC utilization still need to be tuned for each RF setup.
 - Multi-radio synchronization and multi-node networking are not included in v0.1.0.
+- The current frame format is research-oriented and non-standard.
 
-## Roadmap
+## Related Work
 
-Planned development directions:
-
-- Add FEC options and compare uncoded/coded image recovery.
-- Add per-frame EVM, per-subcarrier EVM, and worst-frame diagnostics.
-- Add richer pilot-layout experiments and channel-estimation modes.
-- Add automated offline regression tests from saved IQ captures.
-- Add a small configuration file format for reproducible experiment presets.
-- Extend from single-USRP loopback to two-USRP and multi-node D2D experiments.
-- Add optional real-time visualization for constellation, synchronization, and packet statistics.
-- Package the project for easier installation and environment recreation.
+- [DBU-OFDM: A Trainable Deep Block-Unitary OFDM Waveform for Integrated Sensing and Communication](https://arxiv.org/abs/2604.10296) motivates structure-preserving, AI-enhanced OFDM design. D2D_pyMat does not implement DBU-OFDM, but it is aligned with the goal of keeping OFDM structure while leaving room for trainable modules.
+- [OpenISAC](https://github.com/zhouzhiwen2000/OpenISAC) is an open-source real-time OFDM experimentation platform for ISAC research and is a useful reference for organizing over-the-air PHY projects.
