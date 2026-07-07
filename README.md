@@ -272,4 +272,3 @@ The package exposes `D2D_pyMat.__version__`, the CLI supports `--version`, and e
 ## Related Work
 
 - [DBU-OFDM: A Trainable Deep Block-Unitary OFDM Waveform for Integrated Sensing and Communication](https://arxiv.org/abs/2604.10296) motivates structure-preserving, AI-enhanced OFDM design. D2D_pyMat does not implement DBU-OFDM, but it is aligned with the goal of keeping OFDM structure while leaving room for trainable modules.
-- [OpenISAC](https://github.com/zhouzhiwen2000/OpenISAC) is an open-source real-time OFDM experimentation platform for ISAC research and is a useful reference for organizing over-the-air PHY projects.
