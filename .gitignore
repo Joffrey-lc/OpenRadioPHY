@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.pytest_tmp*/
+.venv/
+build/
+dist/
+*.egg-info/
+outputs/
+*.raw.rgb
+*.fc32
+!samples/ota/bpsk/capture.fc32
+!samples/ota/qpsk/capture.fc32
+!samples/ota/16qam/capture.fc32
+!samples/ota/64qam/capture.fc32

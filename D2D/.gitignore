@@ -1,8 +1,0 @@
-__pycache__/
-*.py[cod]
-.cache/
-.config/
-.vscode/
-trx_outputs/
-*.fc32
-*.raw.rgb

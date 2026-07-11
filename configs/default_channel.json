@@ -1,0 +1,9 @@
+{
+  "snr_db": 35.0,
+  "time_offset": 0,
+  "frequency_offset_hz": 0.0,
+  "seed": 20260710,
+  "multipath_taps": [
+    [0, 1.0, 0.0]
+  ]
+}

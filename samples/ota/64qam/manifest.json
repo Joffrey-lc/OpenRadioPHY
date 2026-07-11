@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "capture_id": "openradiophy-ota-64qam-v1",
+  "source_type": "point_to_point_ota",
+  "modulation": "64QAM",
+  "iq": {
+    "file": "capture.fc32",
+    "sha256": "dbd3f4c75e8c62b1b6fa92c1603486267d68f7590704d805e2febebfda85b094",
+    "dtype": "complex64",
+    "byte_order": "little",
+    "sample_count": 911172
+  },
+  "sample_rate_hz": 2000000.0,
+  "ofdm": {
+    "fft_len": 256,
+    "cp_len": 64,
+    "guard_carriers": 16,
+    "dc_carriers": 4,
+    "pilot_symbols": 16,
+    "pilot_hop": 3,
+    "bits_per_symbol": 6,
+    "zc_length": 1023,
+    "zc_root": 1,
+    "sample_rate": 2000000.0,
+    "normalize_waveform": true,
+    "payload_peak_clip": null,
+    "interleaver": "block",
+    "interleaver_rows": 16,
+    "scrambler": true,
+    "scrambler_seed": 127,
+    "equalizer_block_len": 250,
+    "threshold_factor": 0.5
+  },
+  "protocol": {
+    "payload_size": 1024,
+    "metadata_size": 128
+  },
+  "payload": {
+    "filename": "NJU.jpg",
+    "media_type": "image/jpeg",
+    "size": 257494,
+    "sha256": "1dcf76cf379bc7c7f3b4ade7f2f7c1f93fda681fb9553abd3d3fdbbd87609b3e"
+  }
+}
